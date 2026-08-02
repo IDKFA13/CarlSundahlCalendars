@@ -40,6 +40,8 @@ def parse_value(raw_value: Optional[str]) -> Tuple[Optional[object], Optional[st
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
         return date.fromisoformat(text), "DATE"
 
+    date_only_formats = {"%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y", "%d/%m/%Y"}
+
     for fmt in (
         "%Y-%m-%d %H:%M:%S",
         "%Y-%m-%d %H:%M",
@@ -47,12 +49,18 @@ def parse_value(raw_value: Optional[str]) -> Tuple[Optional[object], Optional[st
         "%Y/%m/%d %H:%M",
         "%m/%d/%Y %H:%M:%S",
         "%m/%d/%Y %H:%M",
+        "%m/%d/%Y",
         "%d/%m/%Y %H:%M:%S",
         "%d/%m/%Y %H:%M",
+        "%d/%m/%Y",
         "%Y-%m-%d",
+        "%Y/%m/%d",
     ):
         try:
-            return datetime.strptime(text, fmt), "DATETIME"
+            parsed = datetime.strptime(text, fmt)
+            if fmt in date_only_formats:
+                return parsed.date(), "DATE"
+            return parsed, "DATETIME"
         except ValueError:
             continue
 
